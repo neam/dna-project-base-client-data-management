@@ -23,8 +23,8 @@ Since there may be multiple independent databases deployed, one may keep track o
 
 Create a new data profile using the helper script, then upload the current current user-generated data to S3, commit the references and profile-related files in dna (anything with <profileref> in it's path) and push.
 
-    vendor/neam/yii-dna-pre-release-testing/shell-scripts/new-data-profile.sh <profileref>
-    vendor/neam/yii-dna-pre-release-testing/shell-scripts/upload-user-data-backup.sh
+    vendor/neam/dna-project-base-data-set-management/shell-scripts/new-data-profile.sh <profileref>
+    vendor/neam/dna-project-base-data-set-management/shell-scripts/upload-user-data-backup.sh
     # then run the three commands to update the data refs
     # commit and push
 
@@ -33,7 +33,7 @@ Create a new data profile using the helper script, then upload the current curre
 Run the following to take the current user-generated schema and copies it to the migration base of the clean-db schema. This makes the default schema to be identical with the user-generated version, and this routine should be done after a release (ie when migrations have been run in production) so that already production-applied migrations can be removed from the current codebase in order to minimize clutter.
 
     export DATA=example
-    vendor/neam/yii-dna-pre-release-testing/shell-scripts/post-release-user-generated-schema-to-clean-db-schema-routine.sh
+    vendor/neam/dna-project-base-data-set-management/shell-scripts/post-release-user-generated-schema-to-clean-db-schema-routine.sh
     # then, manually remove already applied migrations
 
 A comment: Migrations are crucial when it comes to upgrading older deployments to the latest schema. If, however, there are no need of upgrading older deployments to the latest schema and code, migrations may instead add to the maintenance and development routines burden without adding value to the project. This is for instance the case during early development where there are no live deployments, or when all live deployments have run all migrations to date and there is no need to restore from old backups.
