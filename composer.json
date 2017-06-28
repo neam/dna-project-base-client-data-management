@@ -26,7 +26,7 @@
     "require": {
         "php": ">=5.4.0",
         "yiisoft/yii": "~1.1.17",
-        "sumwai/yii-fixture-helper": "@dev",
+        "sumwai/yii-fixture-helper": "dev-master@dev",
         "motin/yii-consoletools": "dev-awaiting-prs@dev",
         "neam/php-app-config": "dev-develop"
     },
