@@ -49,7 +49,7 @@ media_path=/files/$DATA/media
 # to see which commands are executed
 # set -x;
 
-if [ "$DATA" != "clean-db" ]; then
+if [ "$DATA" != "clean-db" ] && [ "$DATA" != "test-clean-db" ]; then
 
     echo "* Fetching the user-generated data associated with this commit" | tee -a $LOG
 
