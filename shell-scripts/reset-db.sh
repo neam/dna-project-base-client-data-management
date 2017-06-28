@@ -100,16 +100,16 @@ if [ "$DATA" == "clean-db" ]; then
 
 fi
 
-echo "* Running legacy Yii migrations" | tee -a $LOG
-console/yii-dna-pre-release-testing-console migrate --interactive=0 >> $LOG
+#echo "* Running legacy Yii migrations" | tee -a $LOG
+#console/yii-dna-pre-release-testing-console migrate --interactive=0 >> $LOG
 
-if [ -f "$dna_path/../bin/migrate-propel.sh" ]; then
+#if [ -f "$dna_path/../bin/migrate-propel.sh" ]; then
 echo "* Running Propel migrations" | tee -a $LOG
 $dna_path/../bin/migrate-propel.sh
-fi
+#fi
 
-echo "* Loading fixtures" | tee -a $LOG
-console/yii-dna-pre-release-testing-console fixture load >> $LOG
+#echo "* Loading fixtures" | tee -a $LOG
+#console/yii-dna-pre-release-testing-console fixture load >> $LOG
 
 echo "* Generating database views" | tee -a $LOG
 console/yii-dna-pre-release-testing-console databaseviewgenerator postResetDb >> $LOG
