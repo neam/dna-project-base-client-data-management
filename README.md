@@ -1,7 +1,7 @@
 DNA Project Base Data Set Management
 ===========================
 
-Scripts and database migrations folder structure suited for release-upgrade testing with fake data and cloned real user data.
+Handles import/export/backup/restore of database data for testing and client-specific debugging purposes, as well as pre-release-upgrade testing with fake data and cloned real user data.
 
 ## Rationale and definitions
 
