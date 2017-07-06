@@ -62,7 +62,7 @@ cat shell-scripts/drop-all-tables-and-views.sql | mysql --no-auto-rehash --host=
 
 echo "* Setting schema character set and collation defaults" | tee -a $LOG
 if [ -f $dna_path/db/migration-base/$DATA/alter-schema-defaults.sql ]; then
-    mysql --no-auto-rehash --host=$DATABASE_HOST --port=$DATABASE_PORT --user=$DATABASE_USER --password=$DATABASE_PASSWORD < $dna_path/db/migration-base/$DATA/alter-schema-defaults.sql
+    pv $dna_path/db/migration-base/$DATA/alter-schema-defaults.sql | mysql --no-auto-rehash --host=$DATABASE_HOST --port=$DATABASE_PORT --user=$DATABASE_USER --password=$DATABASE_PASSWORD
 else
     echo "ALTER SCHEMA $DATABASE_NAME DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_bin;" | mysql --no-auto-rehash --host=$DATABASE_HOST --port=$DATABASE_PORT --user=$DATABASE_USER --password=$DATABASE_PASSWORD
 fi
@@ -82,8 +82,8 @@ if [ "$DATA" != "clean-db" ]; then
     echo "* Loading the user-generated data associated with this commit" | tee -a $LOG
 
     # load mysql dumps
-    mysql --no-auto-rehash --host=$DATABASE_HOST --port=$DATABASE_PORT --user=$DATABASE_USER --password=$DATABASE_PASSWORD $DATABASE_NAME < /tmp/$DATA.schema.sql
-    mysql --no-auto-rehash --host=$DATABASE_HOST --port=$DATABASE_PORT --user=$DATABASE_USER --password=$DATABASE_PASSWORD $DATABASE_NAME < $dna_path/db/migration-base/$DATA/data.sql
+    pv /tmp/$DATA.schema.sql | mysql --no-auto-rehash --host=$DATABASE_HOST --port=$DATABASE_PORT --user=$DATABASE_USER --password=$DATABASE_PASSWORD $DATABASE_NAME
+    pv $dna_path/db/migration-base/$DATA/data.sql | mysql --no-auto-rehash --host=$DATABASE_HOST --port=$DATABASE_PORT --user=$DATABASE_USER --password=$DATABASE_PASSWORD $DATABASE_NAME
 
     # load user generated files (not sending --force-s3-sync to script since it is already performed above)
     shell-scripts/reset-user-generated-files.sh >> $LOG
@@ -95,8 +95,8 @@ if [ "$DATA" == "clean-db" ]; then
     echo "* Loading the clean-db data associated with this commit" | tee -a $LOG
 
     # load mysql dumps
-    mysql --no-auto-rehash --host=$DATABASE_HOST --port=$DATABASE_PORT --user=$DATABASE_USER --password=$DATABASE_PASSWORD $DATABASE_NAME < /tmp/$DATA.schema.sql
-    mysql --no-auto-rehash --host=$DATABASE_HOST --port=$DATABASE_PORT --user=$DATABASE_USER --password=$DATABASE_PASSWORD $DATABASE_NAME < $dna_path/db/migration-base/clean-db/data.sql
+    pv /tmp/$DATA.schema.sql | mysql --no-auto-rehash --host=$DATABASE_HOST --port=$DATABASE_PORT --user=$DATABASE_USER --password=$DATABASE_PASSWORD $DATABASE_NAME
+    pv $dna_path/db/migration-base/clean-db/data.sql | mysql --no-auto-rehash --host=$DATABASE_HOST --port=$DATABASE_PORT --user=$DATABASE_USER --password=$DATABASE_PASSWORD $DATABASE_NAME
 
 fi
 
