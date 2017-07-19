@@ -27,7 +27,7 @@ secret_key = $USER_DATA_BACKUP_UPLOADERS_SECRET" > /tmp/.user-generated-data.s3c
 DATETIME=$(date +"%Y-%m-%d_%H%M%S")
 FOLDER=DATA-$DATA/ENV-$ENV
 
-# sending --non-compact will negate the default behavior of dumping the data in a compact format. useful to be able to inspect the dumped data files
+# sending --non-compact will negate the default behavior of dumping the data in a compact format. useful to be able to inspect the dumped data files, but not viable for large data dumps
 if [ "$1" == "--non-compact" ]; then
     COMPACT="false"
 else
