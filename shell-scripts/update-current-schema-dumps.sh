@@ -13,14 +13,16 @@ source vendor/neam/php-app-config/shell-export.sh
 cd -
 
 # document the current database table defaults
-mysqldump -h$DATABASE_HOST -P$DATABASE_PORT -u$DATABASE_USER --password=$DATABASE_PASSWORD --no-create-info --skip-triggers --no-data --databases $DATABASE_NAME > $dna_path/db/migration-results/$DATA/create-db.sql
+mysqldump --user="$DATABASE_USER" --password="$DATABASE_PASSWORD" --host="$DATABASE_HOST" --port="$DATABASE_PORT" --no-create-info --skip-triggers --no-data --databases $DATABASE_NAME > $dna_path/db/migration-results/$DATA/create-db.sql
 
 # dump the current schema
-console/yii-dna-pre-release-testing-console mysqldump --dumpPath=dna/db --dumpFile=migration-results/$DATA/schema.sql --data=false --schema=true
+mysqldump --user="$DATABASE_USER" --password="$DATABASE_PASSWORD" --host="$DATABASE_HOST" --port="$DATABASE_PORT" --no-data --skip-triggers --no-create-db $DATABASE_NAME \
+  | pv > $dna_path/db/migration-results/$DATA/schema.sql
 
 # dump the current data if DATA=clean-db (otherwise skip in order to save time)
 if [ "$DATA" == "clean-db" ]; then
-    console/yii-dna-pre-release-testing-console mysqldump --dumpPath=dna/db --dumpFile=migration-results/$DATA/data.sql --data=true --schema=false --compact=false
+    mysqldump --user="$DATABASE_USER" --password="$DATABASE_PASSWORD" --host="$DATABASE_HOST" --port="$DATABASE_PORT" --no-create-info --skip-triggers --skip-extended-insert --complete-insert --no-create-db $DATABASE_NAME \
+  | pv > $dna_path/db/migration-results/$DATA/data.sql
 fi
 
 # perform some clean-up on the dump files so that it needs to be committed less often
