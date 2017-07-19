@@ -24,9 +24,6 @@ echo "[default]
 access_key = $USER_DATA_BACKUP_UPLOADERS_ACCESS_KEY
 secret_key = $USER_DATA_BACKUP_UPLOADERS_SECRET" > /tmp/.user-generated-data.s3cfg
 
-# make php binaries available
-export PATH="/app/vendor/php/bin/:$PATH"
-
 DATETIME=$(date +"%Y-%m-%d_%H%M%S")
 FOLDER=DATA-$DATA/ENV-$ENV
 
