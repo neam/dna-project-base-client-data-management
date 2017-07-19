@@ -17,6 +17,18 @@ cd $script_path/..
 dna_path=$(pwd)/../../../dna
 media_path=/files/$DATA/media
 
+# make app config available as shell variables
+cd $dna_path/../
+source vendor/neam/php-app-config/shell-export.sh
+cd - > /dev/null
+
+if [ "$DATA" == "" ]; then
+
+    echo "The environment variable DATA needs to be set"
+    exit 1
+
+fi
+
 # dump
 
 # configure s3cmd
@@ -41,7 +53,11 @@ SCHEMA_FILEPATH=$FOLDER/$DATETIME/schema.sql
 if [ -f $dna_path/db/$DATA.schema.sql ] ; then
     rm $dna_path/db/$DATA.schema.sql
 fi
-console/yii-dna-pre-release-testing-console mysqldump --connectionID=$connectionID --dumpPath=dna/db --dumpFile=$DATA.schema.sql --data=false --skip-triggers
+IGNORE_VIEWS_ARGUMENTS="$(cat shell-scripts/get-ignore-views-arguments.sql | mysql -s -N --no-auto-rehash --host=$DATABASE_HOST --port=$DATABASE_PORT --user=$DATABASE_USER --password=$DATABASE_PASSWORD $DATABASE_NAME)"
+
+mysqldump --user="$DATABASE_USER" --password="$DATABASE_PASSWORD" --host="$DATABASE_HOST" --port="$DATABASE_PORT" --no-data --skip-triggers --no-create-db $IGNORE_VIEWS_ARGUMENTS $DATABASE_NAME \
+ | pv > $dna_path/db/$DATA.schema.sql
+
 if [ ! -f $dna_path/db/$DATA.schema.sql ] ; then
     echo "The mysql dump is not found at the expected location: db/$DATA.schema.sql"
     exit 1
@@ -54,7 +70,9 @@ DATA_FILEPATH=$FOLDER/$DATETIME/data.sql
 if [ -f $dna_path/db/$DATA.data.sql ] ; then
     rm $dna_path/db/$DATA.data.sql
 fi
-console/yii-dna-pre-release-testing-console mysqldump --connectionID=$connectionID --dumpPath=dna/db --dumpFile=$DATA.data.sql --schema=false --compact=$COMPACT
+mysqldump --user="$DATABASE_USER" --password="$DATABASE_PASSWORD" --host="$DATABASE_HOST" --port="$DATABASE_PORT" --no-create-info --skip-triggers --no-create-db $DATABASE_NAME \
+ | pv > $dna_path/db/$DATA.data.sql
+
 if [ ! -f $dna_path/db/$DATA.data.sql ] ; then
     echo "The mysql dump is not found at the expected location: db/$DATA.data.sql"
     exit 1
