@@ -1,6 +1,7 @@
 #!/bin/bash
 
-#set -x
+# uncomment to debug
+# set -x
 
 # fail on any error
 set -o errexit
@@ -31,10 +32,33 @@ fi
 
 # dump
 
-# configure s3cmd
+# configure s3cmd / s3-cli
 echo "[default]
 access_key = $USER_DATA_BACKUP_UPLOADERS_ACCESS_KEY
-secret_key = $USER_DATA_BACKUP_UPLOADERS_SECRET" > /tmp/.user-generated-data.s3cfg
+secret_key = $USER_DATA_BACKUP_UPLOADERS_SECRET
+bucket_location = us-east-1
+multipart_chunk_size_mb = 50
+send_chunk = 40960
+recv_chunk = 40960" > /tmp/.user-generated-data.s3cfg
+
+# configure gsutil
+echo "[Credentials]
+gs_oauth2_refresh_token = $USER_DATA_BACKUP_UPLOADERS_GS_OAUTH2_REFRESH_TOKEN
+
+[Boto]
+https_validate_certificates = True
+
+[GSUtil]
+content_language = en
+default_api_version = 2" > ~/.boto
+
+#COPY_COMMAND="s3cmd -v --config=/tmp/.user-generated-data.s3cfg put"
+#COPY_COMMAND="s3-cli --config=/tmp/.user-generated-data.s3cfg put"
+COPY_COMMAND="gsutil cp"
+
+#SYNC_COMMAND="s3cmd -v --config=/tmp/.user-generated-data.s3cfg --recursive sync"
+#SYNC_COMMAND="s3-cli --config=/tmp/.user-generated-data.s3cfg --recursive sync"
+SYNC_COMMAND="gsutil rsync -d -r"
 
 DATETIME=$(date +"%Y-%m-%d_%H%M%S")
 FOLDER=DATA-$DATA/ENV-$ENV
@@ -90,7 +114,7 @@ fi
 
 gzip -f $dna_path/db/$DATA.schema.sql
 SCHEMA_FILEPATH=$SCHEMA_FILEPATH.gz
-s3cmd -v --config=/tmp/.user-generated-data.s3cfg put $dna_path/db/$DATA.schema.sql.gz "$USER_GENERATED_DATA_S3_BUCKET/$SCHEMA_FILEPATH"
+$COPY_COMMAND $dna_path/db/$DATA.schema.sql.gz "$USER_GENERATED_DATA_S3_BUCKET/$SCHEMA_FILEPATH"
 
 echo $SCHEMA_FILEPATH > $dna_path/db/$DATA.schema.filepath
 
@@ -98,7 +122,7 @@ echo $SCHEMA_FILEPATH > $dna_path/db/$DATA.schema.filepath
 
 gzip -f $dna_path/db/$DATA.data.sql
 DATA_FILEPATH=$DATA_FILEPATH.gz
-s3cmd -v --config=/tmp/.user-generated-data.s3cfg put $dna_path/db/$DATA.data.sql.gz "$USER_GENERATED_DATA_S3_BUCKET/$DATA_FILEPATH"
+$COPY_COMMAND $dna_path/db/$DATA.data.sql.gz "$USER_GENERATED_DATA_S3_BUCKET/$DATA_FILEPATH"
 
 echo $DATA_FILEPATH > $dna_path/db/$DATA.data.filepath
 
@@ -107,7 +131,7 @@ echo $DATA_FILEPATH > $dna_path/db/$DATA.data.filepath
 FOLDERPATH=$FOLDER/$DATETIME/media/
 
 if [ "$(ls $media_path/)" ]; then
-    s3cmd -v --config=/tmp/.user-generated-data.s3cfg --recursive put $media_path/ "$USER_GENERATED_DATA_S3_BUCKET/$FOLDERPATH"
+    $SYNC_COMMAND $media_path/ "$USER_GENERATED_DATA_S3_BUCKET/$FOLDERPATH"
 else
     echo "Warning: No media files found" | tee -a $LOG
 fi

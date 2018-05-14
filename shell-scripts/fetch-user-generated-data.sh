@@ -38,10 +38,33 @@ else
     FORCE=""
 fi
 
-# configure s3cmd
+# configure s3cmd / s3-cli
 echo "[default]
 access_key = $USER_DATA_BACKUP_UPLOADERS_ACCESS_KEY
-secret_key = $USER_DATA_BACKUP_UPLOADERS_SECRET" > /tmp/.user-generated-data.s3cfg
+secret_key = $USER_DATA_BACKUP_UPLOADERS_SECRET
+bucket_location = us-east-1
+multipart_chunk_size_mb = 50
+send_chunk = 40960
+recv_chunk = 40960" > /tmp/.user-generated-data.s3cfg
+
+# configure gsutil
+echo "[Credentials]
+gs_oauth2_refresh_token = $USER_DATA_BACKUP_UPLOADERS_GS_OAUTH2_REFRESH_TOKEN
+
+[Boto]
+https_validate_certificates = True
+
+[GSUtil]
+content_language = en
+default_api_version = 2" > ~/.boto
+
+#GET_COMMAND="s3cmd -v --config=/tmp/.user-generated-data.s3cfg $FORCE get"
+#GET_COMMAND="s3-cli --config=/tmp/.user-generated-data.s3cfg $FORCE get"
+GET_COMMAND="gsutil cp"
+
+#SYNC_COMMAND="s3cmd -v --config=/tmp/.user-generated-data.s3cfg --recursive sync"
+#SYNC_COMMAND="s3-cli --config=/tmp/.user-generated-data.s3cfg --recursive sync"
+SYNC_COMMAND="gsutil rsync"
 
 if ([ ! -f $dna_path/db/migration-base/$DATA/schema.sql ] && [ ! -f $dna_path/db/migration-base/$DATA/schema.sql.gz ]) || [ "$FORCE" ]; then
 
@@ -53,10 +76,10 @@ if ([ ! -f $dna_path/db/migration-base/$DATA/schema.sql ] && [ ! -f $dna_path/db
         export USER_GENERATED_DATA_S3_URL=$USER_GENERATED_DATA_S3_BUCKET/$USER_GENERATED_DATA_FILEPATH
 
         if [ ${USER_GENERATED_DATA_S3_URL: -3} == ".gz" ]; then
-            s3cmd -v --config=/tmp/.user-generated-data.s3cfg $FORCE get "$USER_GENERATED_DATA_S3_URL" $dna_path/db/migration-base/$DATA/schema.sql.gz
+            $GET_COMMAND "$USER_GENERATED_DATA_S3_URL" $dna_path/db/migration-base/$DATA/schema.sql.gz
             gunzip $FORCE $dna_path/db/migration-base/$DATA/schema.sql.gz
         else
-            s3cmd -v --config=/tmp/.user-generated-data.s3cfg $FORCE get "$USER_GENERATED_DATA_S3_URL" $dna_path/db/migration-base/$DATA/schema.sql
+            $GET_COMMAND "$USER_GENERATED_DATA_S3_URL" $dna_path/db/migration-base/$DATA/schema.sql
         fi
 
         echo "User data dump downloaded from $USER_GENERATED_DATA_S3_URL to $dna_path/db/migration-base/$DATA/schema.sql"
@@ -79,10 +102,10 @@ if ([ ! -f $dna_path/db/migration-base/$DATA/data.sql ] && [ ! -f $dna_path/db/m
         export USER_GENERATED_DATA_S3_URL=$USER_GENERATED_DATA_S3_BUCKET/$USER_GENERATED_DATA_FILEPATH
 
         if [ ${USER_GENERATED_DATA_S3_URL: -3} == ".gz" ]; then
-            s3cmd -v --config=/tmp/.user-generated-data.s3cfg $FORCE get "$USER_GENERATED_DATA_S3_URL" $dna_path/db/migration-base/$DATA/data.sql.gz
+            $GET_COMMAND "$USER_GENERATED_DATA_S3_URL" $dna_path/db/migration-base/$DATA/data.sql.gz
             gunzip $FORCE $dna_path/db/migration-base/$DATA/data.sql.gz
         else
-            s3cmd -v --config=/tmp/.user-generated-data.s3cfg $FORCE get "$USER_GENERATED_DATA_S3_URL" $dna_path/db/migration-base/$DATA/data.sql
+            $GET_COMMAND "$USER_GENERATED_DATA_S3_URL" $dna_path/db/migration-base/$DATA/data.sql
         fi
 
         echo "User data dump downloaded from $USER_GENERATED_DATA_S3_URL to $dna_path/db/migration-base/$DATA/data.sql"
@@ -105,7 +128,7 @@ if [ ! -d $dna_path/db/migration-base/$DATA/media/ ] || [ "$FORCE" ]; then
         export USER_GENERATED_MEDIA_FOLDERPATH=`cat $dna_path/db/migration-base/$DATA/media.folderpath`
         export USER_GENERATED_MEDIA_S3_URL=$USER_GENERATED_MEDIA_S3_BUCKET/${USER_GENERATED_MEDIA_FOLDERPATH%/}/
         mkdir $dna_path/db/migration-base/$DATA/media/ || true
-        s3cmd -v --config=/tmp/.user-generated-data.s3cfg --recursive sync "$USER_GENERATED_MEDIA_S3_URL" $dna_path/db/migration-base/$DATA/media/
+        $SYNC_COMMAND "$USER_GENERATED_MEDIA_S3_URL" $dna_path/db/migration-base/$DATA/media/
 
         echo "User media downloaded from $USER_GENERATED_DATA_S3_URL to $dna_path/db/migration-base/$DATA/media/"
 
